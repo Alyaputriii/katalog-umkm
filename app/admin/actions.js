@@ -52,3 +52,51 @@ export async function logout() {
 
 export { logout as keluar };
 
+/**
+ * Server Action untuk mengganti password admin yang sedang login.
+ */
+export async function gantiPassword(arg1, arg2) {
+  const formData = arg2 instanceof FormData ? arg2 : arg1 instanceof FormData ? arg1 : null;
+  const isActionState = arg2 instanceof FormData;
+
+  const supabase = await createSessionClient();
+  const {
+    data: { user },
+    error: authError,
+  } = await supabase.auth.getUser();
+
+  if (authError || !user) {
+    redirect("/admin/login");
+  }
+
+  const passwordBaru = formData?.get("password_baru")?.toString();
+  const konfirmasiPassword = formData?.get("konfirmasi_password")?.toString();
+
+  if (!passwordBaru || passwordBaru.length < 8) {
+    const pesan = "Password baru minimal 8 karakter.";
+    if (isActionState) return { error: pesan };
+    redirect("/admin/password?error=" + encodeURIComponent(pesan));
+  }
+
+  if (passwordBaru !== konfirmasiPassword) {
+    const pesan = "Password baru dan konfirmasi tidak sama.";
+    if (isActionState) return { error: pesan };
+    redirect("/admin/password?error=" + encodeURIComponent(pesan));
+  }
+
+  const { error } = await supabase.auth.updateUser({
+    password: passwordBaru,
+  });
+
+  if (error) {
+    const pesan = error.message || "Gagal mengganti password.";
+    if (isActionState) return { error: pesan };
+    redirect("/admin/password?error=" + encodeURIComponent(pesan));
+  }
+
+  const pesanSukses = "Password berhasil diganti.";
+  if (isActionState) return { success: pesanSukses };
+  redirect("/admin/password?berhasil=" + encodeURIComponent(pesanSukses));
+}
+
+export { gantiPassword as updatePassword };
