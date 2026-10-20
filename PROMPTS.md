@@ -103,3 +103,24 @@ Perbarui `PROMPTS.md` dengan prompt US-07 dan ringkasan implementasi. Jalankan p
 
 **Perbaikan:**
 - Tidak ada kendala. Data dari Supabase langsung tampil pada tabel produk di `/admin`.
+
+
+### US-08 Tambah produk [BONUS]
+
+**Prompt:**
+Baca `AGENTS.md` dan `docs/user-stories.md` bagian US-08 — Tambah Produk. Ikuti seluruh aturan keamanan dan kriteria selesai yang tercantum.
+Implementasikan fitur tambah produk untuk admin sesuai acceptance criteria US-08. Periksa struktur proyek, sumber data produk, serta komponen dan pola form yang sudah ada sebelum melakukan perubahan.
+Pastikan admin dapat menambahkan produk melalui form sesuai field dan validasi yang ditentukan dalam user story. Simpan data menggunakan mekanisme yang sesuai dengan arsitektur proyek, tampilkan pesan berhasil atau gagal, dan pastikan produk yang berhasil ditambahkan muncul pada daftar produk. Validasi input juga harus dilakukan di server, bukan hanya di sisi client.
+Jangan melewati pemeriksaan autentikasi dan otorisasi pada proses yang mengubah data. Jangan menggunakan data dummy atau mengubah fitur lain di luar kebutuhan US-08.
+Perbarui `PROMPTS.md` dengan prompt US-08 dan ringkasan hasil implementasi. Jalankan pemeriksaan yang relevan, lalu laporkan file yang diubah dan hasil pengujiannya. Jangan menjalankan perintah Git karena commit dan push dilakukan secara manual.
+
+**Hasil:**
+- Membuat Server Action `tambahProduk` di `app/admin/actions.js` yang memverifikasi autentikasi sesi admin sebelum memproses mutasi data.
+- Menambahkan validasi input di server: nama produk wajib diisi dan harga harus berupa angka $\ge$ 0.
+- Menyimpan data produk ke tabel `produk` di database Supabase menggunakan `createSessionClient`.
+- Menghubungkan Server Action ke `components/FormProduk.jsx` dan `app/admin/produk/baru/page.jsx`.
+- Melakukan revalidasi cache (`revalidatePath`) untuk `/` dan `/admin`, lalu mengarahkan kembali ke `/admin` disertai notifikasi berhasil.
+- Menghapus komponen `CatatanBelumAktif` dari halaman tambah produk.
+
+**Perbaikan:**
+- Tidak ada kendala; form tambah produk berhasil divalidasi di server dan disimpan ke database Supabase.

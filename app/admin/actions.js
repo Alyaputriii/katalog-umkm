@@ -1,6 +1,7 @@
 "use server";
 
 import { redirect } from "next/navigation";
+import { revalidatePath } from "next/cache";
 import { createSessionClient } from "@/lib/supabase/session";
 
 /**
@@ -100,3 +101,60 @@ export async function gantiPassword(arg1, arg2) {
 }
 
 export { gantiPassword as updatePassword };
+
+/**
+ * Server Action untuk menambah produk baru ke database.
+ */
+export async function tambahProduk(arg1, arg2) {
+  const formData = arg2 instanceof FormData ? arg2 : arg1 instanceof FormData ? arg1 : null;
+  const isActionState = arg2 instanceof FormData;
+
+  const supabase = await createSessionClient();
+  const {
+    data: { user },
+    error: authError,
+  } = await supabase.auth.getUser();
+
+  if (authError || !user) {
+    redirect("/admin/login");
+  }
+
+  const nama = formData?.get("nama")?.toString().trim();
+  const hargaRaw = formData?.get("harga")?.toString().trim();
+  const kategori = formData?.get("kategori")?.toString().trim() || null;
+  const foto_url = formData?.get("foto_url")?.toString().trim() || null;
+  const deskripsi = formData?.get("deskripsi")?.toString().trim() || null;
+
+  if (!nama) {
+    const pesan = "Nama produk wajib diisi.";
+    if (isActionState) return { error: pesan };
+    redirect("/admin/produk/baru?error=" + encodeURIComponent(pesan));
+  }
+
+  const harga = parseInt(hargaRaw, 10);
+  if (isNaN(harga) || harga < 0) {
+    const pesan = "Harga harus berupa angka dan tidak boleh negatif.";
+    if (isActionState) return { error: pesan };
+    redirect("/admin/produk/baru?error=" + encodeURIComponent(pesan));
+  }
+
+  const { error } = await supabase.from("produk").insert({
+    nama,
+    harga,
+    kategori,
+    foto_url,
+    deskripsi,
+  });
+
+  if (error) {
+    const pesan = error.message || "Gagal menyimpan produk ke database.";
+    if (isActionState) return { error: pesan };
+    redirect("/admin/produk/baru?error=" + encodeURIComponent(pesan));
+  }
+
+  revalidatePath("/");
+  revalidatePath("/admin");
+  redirect("/admin?berhasil=" + encodeURIComponent("Produk berhasil ditambahkan."));
+}
+
+export { tambahProduk as createProduct };
